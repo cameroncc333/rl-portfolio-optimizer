@@ -1,0 +1,79 @@
+{
+  "all_features": {
+    "Total Return": "28.15%",
+    "CAGR": "14.00%",
+    "Annual Vol": "13.42%",
+    "Sharpe": "0.76",
+    "Sortino": "0.95",
+    "Max Drawdown": "-15.03%",
+    "Calmar": "0.93",
+    "Win Rate": "53.67%",
+    "Days": 477
+  },
+  "no_momentum": {
+    "Total Return": "31.00%",
+    "CAGR": "14.99%",
+    "Annual Vol": "13.15%",
+    "Sharpe": "0.86",
+    "Sortino": "1.07",
+    "Max Drawdown": "-14.20%",
+    "Calmar": "1.06",
+    "Win Rate": "54.62%",
+    "Days": 487
+  },
+  "no_volatility": {
+    "Total Return": "17.81%",
+    "CAGR": "14.20%",
+    "Annual Vol": "14.68%",
+    "Sharpe": "0.71",
+    "Sortino": "0.92",
+    "Max Drawdown": "-13.96%",
+    "Calmar": "1.02",
+    "Win Rate": "53.05%",
+    "Days": 311
+  },
+  "no_trend": {
+    "Total Return": "27.94%",
+    "CAGR": "16.06%",
+    "Annual Vol": "13.68%",
+    "Sharpe": "0.90",
+    "Sortino": "1.11",
+    "Max Drawdown": "-13.60%",
+    "Calmar": "1.18",
+    "Win Rate": "54.68%",
+    "Days": 417
+  },
+  "no_risk": {
+    "Total Return": "25.70%",
+    "CAGR": "13.90%",
+    "Annual Vol": "13.51%",
+    "Sharpe": "0.75",
+    "Sortino": "0.95",
+    "Max Drawdown": "-13.67%",
+    "Calmar": "1.02",
+    "Win Rate": "53.50%",
+    "Days": 443
+  },
+  "no_regime": {
+    "Total Return": "24.97%",
+    "CAGR": "25.65%",
+    "Annual Vol": "13.64%",
+    "Sharpe": "1.61",
+    "Sortino": "2.75",
+    "Max Drawdown": "-6.72%",
+    "Calmar": "3.82",
+    "Win Rate": "53.66%",
+    "Days": 246
+  },
+  "no_relative": {
+    "Total Return": "12.53%",
+    "CAGR": "16.49%",
+    "Annual Vol": "9.78%",
+    "Sharpe": "1.30",
+    "Sortino": "1.96",
+    "Max Drawdown": "-6.13%",
+    "Calmar": "2.69",
+    "Win Rate": "54.87%",
+    "Days": 195
+  }
+}

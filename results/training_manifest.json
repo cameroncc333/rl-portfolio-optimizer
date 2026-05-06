@@ -1,0 +1,452 @@
+[
+  {
+    "agent": "PPO",
+    "seed": 42,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/PPO_w0_s42/PPO_w0_s42_final",
+    "run_id": "PPO_w0_s42",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 123,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/PPO_w0_s123/PPO_w0_s123_final",
+    "run_id": "PPO_w0_s123",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 456,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/PPO_w0_s456/PPO_w0_s456_final",
+    "run_id": "PPO_w0_s456",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 789,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/PPO_w0_s789/PPO_w0_s789_final",
+    "run_id": "PPO_w0_s789",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 1337,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/PPO_w0_s1337/PPO_w0_s1337_final",
+    "run_id": "PPO_w0_s1337",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 42,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/A2C_w0_s42/A2C_w0_s42_final",
+    "run_id": "A2C_w0_s42",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 123,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/A2C_w0_s123/A2C_w0_s123_final",
+    "run_id": "A2C_w0_s123",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 456,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/A2C_w0_s456/A2C_w0_s456_final",
+    "run_id": "A2C_w0_s456",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 789,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/A2C_w0_s789/A2C_w0_s789_final",
+    "run_id": "A2C_w0_s789",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 1337,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/A2C_w0_s1337/A2C_w0_s1337_final",
+    "run_id": "A2C_w0_s1337",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 42,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/SAC_w0_s42/SAC_w0_s42_final",
+    "run_id": "SAC_w0_s42",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 123,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/SAC_w0_s123/SAC_w0_s123_final",
+    "run_id": "SAC_w0_s123",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 456,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/SAC_w0_s456/SAC_w0_s456_final",
+    "run_id": "SAC_w0_s456",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 789,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/SAC_w0_s789/SAC_w0_s789_final",
+    "run_id": "SAC_w0_s789",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 1337,
+    "window": 0,
+    "train_period": "2008-01-01 \u2192 2018-12-31",
+    "test_period": "2019-01-01 \u2192 2020-12-31",
+    "model_path": "models/SAC_w0_s1337/SAC_w0_s1337_final",
+    "run_id": "SAC_w0_s1337",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 42,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/PPO_w1_s42/PPO_w1_s42_final",
+    "run_id": "PPO_w1_s42",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 123,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/PPO_w1_s123/PPO_w1_s123_final",
+    "run_id": "PPO_w1_s123",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 456,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/PPO_w1_s456/PPO_w1_s456_final",
+    "run_id": "PPO_w1_s456",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 789,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/PPO_w1_s789/PPO_w1_s789_final",
+    "run_id": "PPO_w1_s789",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 1337,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/PPO_w1_s1337/PPO_w1_s1337_final",
+    "run_id": "PPO_w1_s1337",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 42,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/A2C_w1_s42/A2C_w1_s42_final",
+    "run_id": "A2C_w1_s42",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 123,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/A2C_w1_s123/A2C_w1_s123_final",
+    "run_id": "A2C_w1_s123",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 456,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/A2C_w1_s456/A2C_w1_s456_final",
+    "run_id": "A2C_w1_s456",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 789,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/A2C_w1_s789/A2C_w1_s789_final",
+    "run_id": "A2C_w1_s789",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 1337,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/A2C_w1_s1337/A2C_w1_s1337_final",
+    "run_id": "A2C_w1_s1337",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 42,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/SAC_w1_s42/SAC_w1_s42_final",
+    "run_id": "SAC_w1_s42",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 123,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/SAC_w1_s123/SAC_w1_s123_final",
+    "run_id": "SAC_w1_s123",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 456,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/SAC_w1_s456/SAC_w1_s456_final",
+    "run_id": "SAC_w1_s456",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 789,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/SAC_w1_s789/SAC_w1_s789_final",
+    "run_id": "SAC_w1_s789",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 1337,
+    "window": 1,
+    "train_period": "2008-01-01 \u2192 2021-06-30",
+    "test_period": "2021-07-01 \u2192 2023-06-30",
+    "model_path": "models/SAC_w1_s1337/SAC_w1_s1337_final",
+    "run_id": "SAC_w1_s1337",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 42,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/PPO_w2_s42/PPO_w2_s42_final",
+    "run_id": "PPO_w2_s42",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 123,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/PPO_w2_s123/PPO_w2_s123_final",
+    "run_id": "PPO_w2_s123",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 456,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/PPO_w2_s456/PPO_w2_s456_final",
+    "run_id": "PPO_w2_s456",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 789,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/PPO_w2_s789/PPO_w2_s789_final",
+    "run_id": "PPO_w2_s789",
+    "status": "success"
+  },
+  {
+    "agent": "PPO",
+    "seed": 1337,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/PPO_w2_s1337/PPO_w2_s1337_final",
+    "run_id": "PPO_w2_s1337",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 42,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/A2C_w2_s42/A2C_w2_s42_final",
+    "run_id": "A2C_w2_s42",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 123,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/A2C_w2_s123/A2C_w2_s123_final",
+    "run_id": "A2C_w2_s123",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 456,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/A2C_w2_s456/A2C_w2_s456_final",
+    "run_id": "A2C_w2_s456",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 789,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/A2C_w2_s789/A2C_w2_s789_final",
+    "run_id": "A2C_w2_s789",
+    "status": "success"
+  },
+  {
+    "agent": "A2C",
+    "seed": 1337,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/A2C_w2_s1337/A2C_w2_s1337_final",
+    "run_id": "A2C_w2_s1337",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 42,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/SAC_w2_s42/SAC_w2_s42_final",
+    "run_id": "SAC_w2_s42",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 123,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/SAC_w2_s123/SAC_w2_s123_final",
+    "run_id": "SAC_w2_s123",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 456,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/SAC_w2_s456/SAC_w2_s456_final",
+    "run_id": "SAC_w2_s456",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 789,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/SAC_w2_s789/SAC_w2_s789_final",
+    "run_id": "SAC_w2_s789",
+    "status": "success"
+  },
+  {
+    "agent": "SAC",
+    "seed": 1337,
+    "window": 2,
+    "train_period": "2008-01-01 \u2192 2023-12-31",
+    "test_period": "2024-01-01 \u2192 2026-03-31",
+    "model_path": "models/SAC_w2_s1337/SAC_w2_s1337_final",
+    "run_id": "SAC_w2_s1337",
+    "status": "success"
+  }
+]

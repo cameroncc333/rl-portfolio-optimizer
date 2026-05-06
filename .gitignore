@@ -1,0 +1,10 @@
+rl_env/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+logs/
+*.log
+
+# Trained models (5.8GB - too large for git, hosted via GitHub Releases)
+models/

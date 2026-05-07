@@ -2,16 +2,13 @@ name: Sector Command Signals
 
 on:
   schedule:
-    # 4x daily: 8:00 AM, 10:00 AM, 1:00 PM, 3:30 PM ET (UTC-4)
-    - cron: '0 12 * * 1-5'   # 8:00 AM ET
-    - cron: '0 14 * * 1-5'   # 10:00 AM ET
-    - cron: '0 17 * * 1-5'   # 1:00 PM ET
-    - cron: '30 19 * * 1-5'  # 3:30 PM ET
-    # End of day summary: 4:15 PM ET
-    - cron: '15 20 * * 1-5'  # 4:15 PM ET
-    # Saturday morning recap: 9:00 AM ET
-    - cron: '0 13 * * 6'     # Saturday 9:00 AM ET
-  workflow_dispatch:  # Manual trigger for testing
+    - cron: '0 12 * * 1-5'
+    - cron: '0 14 * * 1-5'
+    - cron: '0 17 * * 1-5'
+    - cron: '30 19 * * 1-5'
+    - cron: '15 20 * * 1-5'
+    - cron: '0 13 * * 6'
+  workflow_dispatch:
 
 jobs:
   signal:
@@ -30,19 +27,23 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-full.txt') }}
 
       - name: Install dependencies
         run: |
           pip install -r requirements.txt -r requirements-full.txt
           pip install twilio gspread google-auth
 
-      - name: Download model artifacts
+      - name: Decode Google credentials
+        env:
+          GOOGLE_CREDS_B64: ${{ secrets.GOOGLE_CREDS_B64 }}
         run: |
-          # Models are stored as a GitHub release artifact
-          # Or use git-lfs if models are in the repo
-          echo "Models should be in models/ directory"
-          ls -la models/ 2>/dev/null || echo "No models directory found"
+          printf '%s' "$GOOGLE_CREDS_B64" | base64 -d > creds.json
+          if [ ! -s creds.json ]; then
+            echo "ERROR: creds.json is empty after decode"
+            exit 1
+          fi
+          echo "creds.json decoded successfully ($(wc -c < creds.json) bytes)"
 
       - name: Run Signal Server
         env:
@@ -50,11 +51,10 @@ jobs:
           TWILIO_TOKEN: ${{ secrets.TWILIO_TOKEN }}
           TWILIO_PHONE: ${{ secrets.TWILIO_PHONE }}
           MY_PHONE: ${{ secrets.MY_PHONE }}
+          SHEET_NAME: ${{ secrets.SHEET_NAME }}
           GOOGLE_CREDS_PATH: creds.json
-        run: |
-          # Decode Google credentials from secret
-          echo "${{ secrets.GOOGLE_CREDS_B64 }}" | base64 -d > creds.json
-          python signal_server.py
+          MODE: dry-run
+        run: python signal_server.py --dry-run
 
       - name: Log result
         if: always()

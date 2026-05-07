@@ -615,7 +615,7 @@ def main():
         if creds_path and os.path.exists(creds_path):
             creds = Credentials.from_service_account_file(
                 creds_path,
-                scopes=["https://www.googleapis.com/auth/spreadsheets"]
+                scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
             )
             gc = gspread.authorize(creds)
             sheets_client = gc.open("Sector Command")

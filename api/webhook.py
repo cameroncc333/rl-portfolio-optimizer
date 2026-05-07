@@ -282,7 +282,7 @@ def load_portfolio():
         from google.oauth2.service_account import Credentials
         creds = Credentials.from_service_account_file(
             os.environ.get("GOOGLE_CREDS_PATH", "creds.json"),
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         )
         gc = gspread.authorize(creds)
         sheet = gc.open("Sector Command").worksheet("Portfolio")
@@ -303,7 +303,7 @@ def save_portfolio(portfolio):
         from google.oauth2.service_account import Credentials
         creds = Credentials.from_service_account_file(
             os.environ.get("GOOGLE_CREDS_PATH", "creds.json"),
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         )
         gc = gspread.authorize(creds)
         sheet = gc.open("Sector Command").worksheet("Portfolio")
@@ -320,7 +320,7 @@ def load_latest_signal():
         from google.oauth2.service_account import Credentials
         creds = Credentials.from_service_account_file(
             os.environ.get("GOOGLE_CREDS_PATH", "creds.json"),
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         )
         gc = gspread.authorize(creds)
         sheet = gc.open("Sector Command").worksheet("Signals")
@@ -339,7 +339,7 @@ def log_journal_entry(entry):
         from google.oauth2.service_account import Credentials
         creds = Credentials.from_service_account_file(
             os.environ.get("GOOGLE_CREDS_PATH", "creds.json"),
-            scopes=["https://www.googleapis.com/auth/spreadsheets"]
+            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
         )
         gc = gspread.authorize(creds)
         sheet = gc.open("Sector Command").worksheet("Journal")

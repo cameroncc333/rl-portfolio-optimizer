@@ -1,7 +1,13 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/webhook.py", "use": "@vercel/python" }
+    {
+      "src": "api/webhook.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
+    }
   ],
   "routes": [
     { "src": "/api/webhook", "dest": "/api/webhook.py" },

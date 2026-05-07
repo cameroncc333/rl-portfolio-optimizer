@@ -9,8 +9,31 @@ Deploy to Vercel as api/webhook.py
 
 import os
 import json
+import base64
+import tempfile
 from datetime import datetime
 from flask import Flask, request, Response
+
+
+def _init_google_creds():
+    """Decode GOOGLE_CREDS_B64 env var into a temp file for gspread auth."""
+    b64 = os.environ.get("GOOGLE_CREDS_B64", "")
+    if not b64:
+        return
+    try:
+        decoded = base64.b64decode(b64).decode("utf-8")
+        tmp = tempfile.NamedTemporaryFile(
+            mode="w", suffix=".json", delete=False
+        )
+        tmp.write(decoded)
+        tmp.close()
+        os.environ["GOOGLE_CREDS_PATH"] = tmp.name
+        print(f"[Init] Wrote Google creds to {tmp.name}")
+    except Exception as e:
+        print(f"[Init] Failed to decode GOOGLE_CREDS_B64: {e}")
+
+
+_init_google_creds()
 
 app = Flask(__name__)
 SYSTEM_VERSION = "v4.2"

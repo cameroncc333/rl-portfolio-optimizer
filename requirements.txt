@@ -32,3 +32,4 @@ tensorboard>=2.15.0
 
 # Hyperparameter Tuning (optional, for extended experiments)
 # optuna>=3.4.0
+flask==3.0.0

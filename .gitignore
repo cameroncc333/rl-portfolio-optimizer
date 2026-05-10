@@ -8,3 +8,9 @@ logs/
 
 # Trained models (5.8GB - too large for git, hosted via GitHub Releases)
 models/
+
+# Models hosted via GitHub Releases, never commit
+models-live/
+models-live.tar.gz
+models.tar.gz
+models.tar.gz.part-*

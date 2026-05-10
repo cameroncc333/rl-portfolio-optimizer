@@ -45,6 +45,20 @@ jobs:
           fi
           echo "creds.json decoded successfully ($(wc -c < creds.json) bytes)"
 
+      - name: Download trained models
+        run: |
+          echo "Downloading models-live.tar.gz from GitHub Release..."
+          curl -L -o models-live.tar.gz \
+            https://github.com/cameroncc333/rl-portfolio-optimizer/releases/download/v1.0-models/models-live.tar.gz
+          echo "Verifying download..."
+          ls -lh models-live.tar.gz
+          echo "Extracting..."
+          tar -xzf models-live.tar.gz
+          rm models-live.tar.gz
+          mv models-live models
+          echo "Models in place:"
+          ls models/
+
       - name: Run Signal Server
         env:
           TWILIO_SID: ${{ secrets.TWILIO_SID }}
@@ -53,7 +67,6 @@ jobs:
           MY_PHONE: ${{ secrets.MY_PHONE }}
           SHEET_NAME: ${{ secrets.SHEET_NAME }}
           GOOGLE_CREDS_PATH: creds.json
-          MODE: dry-run
         run: python signal_server.py --dry-run
 
       - name: Log result

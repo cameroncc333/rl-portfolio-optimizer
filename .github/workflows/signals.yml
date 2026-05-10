@@ -74,7 +74,7 @@ jobs:
           MY_PHONE: ${{ secrets.MY_PHONE }}
           SHEET_NAME: ${{ secrets.SHEET_NAME }}
           GOOGLE_CREDS_PATH: creds.json
-        run: python signal_server.py --dry-run
+        run: python signal_server.py
 
       - name: Log result
         if: always()

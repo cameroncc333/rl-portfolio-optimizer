@@ -50,12 +50,19 @@ jobs:
           echo "Downloading models-live.tar.gz from GitHub Release..."
           curl -L -o models-live.tar.gz \
             https://github.com/cameroncc333/rl-portfolio-optimizer/releases/download/v1.0-models/models-live.tar.gz
-          echo "Verifying download..."
+          echo "Inspecting downloaded file..."
+          file models-live.tar.gz
           ls -lh models-live.tar.gz
-          echo "Extracting..."
-          tar -xzf models-live.tar.gz
+          echo "Extracting (auto-detect format)..."
+          if file models-live.tar.gz | grep -q "gzip"; then
+            tar -xzf models-live.tar.gz
+          else
+            tar -xf models-live.tar.gz
+          fi
           rm models-live.tar.gz
-          mv models-live models
+          if [ -d models-live ]; then
+            mv models-live models
+          fi
           echo "Models in place:"
           ls models/
 

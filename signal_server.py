@@ -249,41 +249,41 @@ class SectorCommand:
         return recs
 
     def format_sms(self, signals, portfolio=None):
-        """Format signals into a COMPACT SMS message (trial-friendly, ~150 chars).
+        """Ultra-compact SMS (under 160 chars / 1 segment) for Twilio trial.
         Full details printed to console and logged to Google Sheets."""
         ts = signals["timestamp"]
         regime = signals["regime"].upper()[:4]
         vix = signals["vix"]
         recs = signals["recommendations"]
 
-        time_part = ts.split(' ')[1] if ' ' in ts else ''
-        lines = [f"SC {time_part} {regime} VIX{vix:.0f}"]
+        time_part = ts.split(' ')[1][:5] if ' ' in ts else ''
+        parts = [f"SC {time_part} {regime} V{vix:.0f}"]
 
         if portfolio:
             bal = portfolio.get("balance", 0)
             init = portfolio.get("initial", 400)
-            pnl_pct = (bal - init) / init * 100 if init > 0 else 0
+            pnl = (bal - init) / init * 100 if init > 0 else 0
             ghost = portfolio.get("ghost_balance", init)
             ghost_pnl = (ghost - init) / init * 100 if init > 0 else 0
-            alpha = pnl_pct - ghost_pnl
-            lines.append(f"${bal:.0f}({pnl_pct:+.0f}%) a{alpha:+.0f}%")
+            alpha = pnl - ghost_pnl
+            parts.append(f"${bal:.0f} a{alpha:+.0f}%")
 
-        if not recs:
-            lines.append("HOLD")
-        else:
-            for r in recs[:3]:
-                emoji = "+" if r["action"] == "BUY" else "-"
-                veto = "!" if r["vetoed"] else ""
-                conv = r["conviction"]
+        if recs:
+            for r in recs[:2]:
+                act = "B" if r["action"] == "BUY" else "S"
                 if portfolio:
                     bal = portfolio.get("balance", 400)
                     amt = bal * r["target_weight"] * r["sizing_multiplier"]
-                    lines.append(f"{emoji}{r['action']} ${amt:.0f} {r['ticker']} {conv}/3{veto}")
+                    parts.append(f"{act} {r['ticker']} ${amt:.0f}")
                 else:
-                    lines.append(f"{emoji}{r['action']} {r['ticker']} {r['target_weight']:.0%} {conv}/3{veto}")
+                    parts.append(f"{act} {r['ticker']}")
+        else:
+            parts.append("HOLD")
 
-        lines.append("Reply BUY/SELL/SKIP/STATUS")
-        return "\n".join(lines)
+        parts.append("Reply STATUS")
+        msg = " | ".join(parts)
+        # Hard cap at 159 chars to ensure single segment
+        return msg[:159]
 
     def format_sms_full(self, signals, portfolio=None):
         """Full SMS format (for logging/Sheets, not actual SMS due to trial limits)."""

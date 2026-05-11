@@ -249,44 +249,7 @@ class SectorCommand:
         return recs
 
     def format_sms(self, signals, portfolio=None):
-        """Format signals into a COMPACT SMS message (trial-friendly, ~150 chars).
-        Full details printed to console and logged to Google Sheets."""
-        ts = signals["timestamp"]
-        regime = signals["regime"].upper()[:4]
-        vix = signals["vix"]
-        recs = signals["recommendations"]
-
-        time_part = ts.split(' ')[1] if ' ' in ts else ''
-        lines = [f"SC {time_part} {regime} VIX{vix:.0f}"]
-
-        if portfolio:
-            bal = portfolio.get("balance", 0)
-            init = portfolio.get("initial", 400)
-            pnl_pct = (bal - init) / init * 100 if init > 0 else 0
-            ghost = portfolio.get("ghost_balance", init)
-            ghost_pnl = (ghost - init) / init * 100 if init > 0 else 0
-            alpha = pnl_pct - ghost_pnl
-            lines.append(f"${bal:.0f}({pnl_pct:+.0f}%) a{alpha:+.0f}%")
-
-        if not recs:
-            lines.append("HOLD")
-        else:
-            for r in recs[:3]:
-                emoji = "+" if r["action"] == "BUY" else "-"
-                veto = "!" if r["vetoed"] else ""
-                conv = r["conviction"]
-                if portfolio:
-                    bal = portfolio.get("balance", 400)
-                    amt = bal * r["target_weight"] * r["sizing_multiplier"]
-                    lines.append(f"{emoji}{r['action']} ${amt:.0f} {r['ticker']} {conv}/3{veto}")
-                else:
-                    lines.append(f"{emoji}{r['action']} {r['ticker']} {r['target_weight']:.0%} {conv}/3{veto}")
-
-        lines.append("Reply BUY/SELL/SKIP/STATUS")
-        return "\n".join(lines)
-
-    def format_sms_full(self, signals, portfolio=None):
-        """Full SMS format (for logging/Sheets, not actual SMS due to trial limits)."""
+        """Format signals into an SMS message."""
         ts = signals["timestamp"]
         regime = signals["regime"].upper()
         vix = signals["vix"]
@@ -294,6 +257,7 @@ class SectorCommand:
 
         lines = [f"SECTOR COMMAND {ts.split(' ')[1] if ' ' in ts else ''}"]
 
+        # Portfolio status (if we have it)
         if portfolio:
             bal = portfolio.get("balance", 0)
             init = portfolio.get("initial", 400)
@@ -301,6 +265,7 @@ class SectorCommand:
             ghost = portfolio.get("ghost_balance", init)
             ghost_pnl = (ghost - init) / init * 100 if init > 0 else 0
             alpha = pnl_pct - ghost_pnl
+
             lines.append(f"Portfolio: ${bal:.2f} ({pnl_pct:+.1f}%)")
             lines.append(f"Ghost SPY: ${ghost:.2f} ({ghost_pnl:+.1f}%)")
             lines.append(f"Alpha: {alpha:+.1f}%")
@@ -308,28 +273,38 @@ class SectorCommand:
         lines.append(f"Regime: {regime} | VIX: {vix:.1f} | {term}")
         lines.append("")
 
+        # Recommendations
         recs = signals["recommendations"]
         if not recs:
-            lines.append("NO SIGNALS")
+            lines.append("NO SIGNALS — hold current positions")
         else:
-            for r in recs[:3]:
-                emoji = "BUY" if r["action"] == "BUY" else "SELL"
+            for r in recs[:3]:  # Max 3 recs per text (SMS length limit)
+                emoji = "📈" if r["action"] == "BUY" else "📉"
                 vetoed_tag = " [VETOED]" if r["vetoed"] else ""
+
                 if portfolio:
                     bal = portfolio.get("balance", 400)
                     dollar_amt = bal * r["target_weight"] * r["sizing_multiplier"]
-                    lines.append(f"{emoji} ${dollar_amt:.0f} {r['ticker']} ({r['sector'][:12]}){vetoed_tag}")
+                    lines.append(f"{emoji} {r['action']} ${dollar_amt:.0f} {r['ticker']} "
+                                 f"({r['sector'][:12]}){vetoed_tag}")
                 else:
-                    lines.append(f"{emoji} {r['ticker']} -> {r['target_weight']:.1%}{vetoed_tag}")
+                    lines.append(f"{emoji} {r['action']} {r['ticker']} → "
+                                 f"{r['target_weight']:.1%}{vetoed_tag}")
+
                 lines.append(f"  Conviction: {r['conviction_label']} ({r['conviction']}/3)")
-                lines.append(f"  Risk: {r['risk']} | RSI: {r['rsi']:.0f} | b: {r['beta']:.1f}")
+                lines.append(f"  Risk: {r['risk']} | RSI: {r['rsi']:.0f} | β: {r['beta']:.1f}")
+
                 if r["vetoed"]:
                     lines.append(f"  VETO: {r['veto_reason']}")
+
+                # Agent breakdown
                 aw = r["agent_weights"]
                 agent_str = " | ".join(f"{a}: {w:.0%}" for a, w in aw.items())
                 lines.append(f"  {agent_str}")
                 lines.append("")
+
         lines.append("Reply: BUY, SELL, SKIP, STATUS, WHY")
+
         return "\n".join(lines)
 
     def format_eod_summary(self, signals, portfolio):

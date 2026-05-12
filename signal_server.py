@@ -249,41 +249,63 @@ class SectorCommand:
         return recs
 
     def format_sms(self, signals, portfolio=None):
-        """Ultra-compact SMS (under 160 chars / 1 segment) for Twilio trial.
-        Full details printed to console and logged to Google Sheets."""
+        """Format signals into an SMS message."""
         ts = signals["timestamp"]
-        regime = signals["regime"].upper()[:4]
+        regime = signals["regime"].upper()
         vix = signals["vix"]
-        recs = signals["recommendations"]
+        term = signals["vix_term_label"]
 
-        time_part = ts.split(' ')[1][:5] if ' ' in ts else ''
-        parts = [f"SC {time_part} {regime} V{vix:.0f}"]
+        lines = [f"SECTOR COMMAND {ts.split(' ')[1] if ' ' in ts else ''}"]
 
+        # Portfolio status (if we have it)
         if portfolio:
             bal = portfolio.get("balance", 0)
             init = portfolio.get("initial", 400)
-            pnl = (bal - init) / init * 100 if init > 0 else 0
+            pnl_pct = (bal - init) / init * 100 if init > 0 else 0
             ghost = portfolio.get("ghost_balance", init)
             ghost_pnl = (ghost - init) / init * 100 if init > 0 else 0
-            alpha = pnl - ghost_pnl
-            parts.append(f"${bal:.0f} a{alpha:+.0f}%")
+            alpha = pnl_pct - ghost_pnl
 
-        if recs:
-            for r in recs[:2]:
-                act = "B" if r["action"] == "BUY" else "S"
+            lines.append(f"Portfolio: ${bal:.2f} ({pnl_pct:+.1f}%)")
+            lines.append(f"Ghost SPY: ${ghost:.2f} ({ghost_pnl:+.1f}%)")
+            lines.append(f"Alpha: {alpha:+.1f}%")
+
+        lines.append(f"Regime: {regime} | VIX: {vix:.1f} | {term}")
+        lines.append("")
+
+        # Recommendations
+        recs = signals["recommendations"]
+        if not recs:
+            lines.append("NO SIGNALS — hold current positions")
+        else:
+            for r in recs[:3]:  # Max 3 recs per text
+                emoji = "📈" if r["action"] == "BUY" else "📉"
+                vetoed_tag = " [VETOED]" if r["vetoed"] else ""
+
                 if portfolio:
                     bal = portfolio.get("balance", 400)
-                    amt = bal * r["target_weight"] * r["sizing_multiplier"]
-                    parts.append(f"{act} {r['ticker']} ${amt:.0f}")
+                    dollar_amt = bal * r["target_weight"] * r["sizing_multiplier"]
+                    lines.append(f"{emoji} {r['action']} ${dollar_amt:.0f} {r['ticker']} "
+                                 f"({r['sector'][:12]}){vetoed_tag}")
                 else:
-                    parts.append(f"{act} {r['ticker']}")
-        else:
-            parts.append("HOLD")
+                    lines.append(f"{emoji} {r['action']} {r['ticker']} → "
+                                 f"{r['target_weight']:.1%}{vetoed_tag}")
 
-        parts.append("Reply STATUS")
-        msg = " | ".join(parts)
-        # Hard cap at 159 chars to ensure single segment
-        return msg[:159]
+                lines.append(f"  Conviction: {r['conviction_label']} ({r['conviction']}/3)")
+                lines.append(f"  Risk: {r['risk']} | RSI: {r['rsi']:.0f} | β: {r['beta']:.1f}")
+
+                if r["vetoed"]:
+                    lines.append(f"  VETO: {r['veto_reason']}")
+
+                # Agent breakdown
+                aw = r["agent_weights"]
+                agent_str = " | ".join(f"{a}: {w:.0%}" for a, w in aw.items())
+                lines.append(f"  {agent_str}")
+                lines.append("")
+
+        lines.append("Reply: BUY, SELL, SKIP, STATUS, WHY")
+
+        return "\n".join(lines)
 
     def format_sms_full(self, signals, portfolio=None):
         """Full SMS format (for logging/Sheets, not actual SMS due to trial limits)."""

@@ -15,7 +15,8 @@ from config import (
     DATA_START, DATA_END, RETURN_WINDOWS, RSI_PERIOD,
     MACD_FAST, MACD_SLOW, MACD_SIGNAL, BOLLINGER_PERIOD,
     BOLLINGER_STD, VOLATILITY_WINDOW, SHARPE_WINDOW,
-    CORRELATION_WINDOW, LATE_INCEPTION, ABSTAIN_ASSETS
+    CORRELATION_WINDOW, LATE_INCEPTION, ABSTAIN_ASSETS,
+    USE_CROSS_SECTIONAL_FEATURES
 )
 
 
@@ -166,6 +167,9 @@ def compute_features(close, volume, vix, vix3m):
     feature_df = feature_df.dropna(how="all")
     feature_df = feature_df.fillna(0.0)
 
+    if USE_CROSS_SECTIONAL_FEATURES:
+        feature_df = _add_cross_sectional_features(feature_df, sector_tickers)
+
     regimes, regime_numeric = detect_regimes(close, vix)
     regimes = regimes.reindex(feature_df.index)
     regime_numeric = regime_numeric.reindex(feature_df.index)
@@ -177,6 +181,53 @@ def compute_features(close, volume, vix, vix3m):
           f"({len(feature_df)} days)")
 
     return feature_df, regimes, regime_numeric
+
+
+def _add_cross_sectional_features(feature_df, sector_tickers):
+    """
+    Add cross-sectional Z-score features: for each of the 4 most signal-rich
+    features, compute Z = (ticker_value - cross_sectional_mean) / cross_sectional_std.
+    This strips broad market noise so the model reads pure idiosyncratic alpha.
+    Per ScienceDirect paper: S_t = [f_idiosyncratic, β_systematic].
+    """
+    cs_features = ["ret_20d", "rsi", "rel_strength", "sharpe"]
+    new_cols = {}
+
+    for feat_name in cs_features:
+        # Collect this feature across all tickers at each time step
+        ticker_cols = {t: feature_df[(feat_name, t)]
+                       for t in sector_tickers
+                       if (feat_name, t) in feature_df.columns}
+        if not ticker_cols:
+            continue
+        cross_df = pd.DataFrame(ticker_cols)  # (T, num_assets)
+        cs_mean = cross_df.mean(axis=1)
+        cs_std = cross_df.std(axis=1) + 1e-8
+        z_name = f"{feat_name}_cs"
+        for t in sector_tickers:
+            if (feat_name, t) in feature_df.columns:
+                new_cols[(z_name, t)] = (feature_df[(feat_name, t)] - cs_mean) / cs_std
+
+    if new_cols:
+        new_df = pd.DataFrame(new_cols, index=feature_df.index)
+        new_df.columns = pd.MultiIndex.from_tuples(new_df.columns,
+                                                    names=["feature", "ticker"])
+        feature_df = pd.concat([feature_df, new_df], axis=1)
+
+    return feature_df
+
+
+def compute_cross_sectional_dispersion(returns_df):
+    """
+    Measure how much individual assets are moving independently vs as a herd.
+    High dispersion = idiosyncratic drivers → good regime for RL alpha.
+    Low dispersion → herd macro move → RL at risk of dormant neurons.
+    Returns a rolling 20-day Series of dispersion values.
+    """
+    cross_mean = returns_df.mean(axis=1)
+    deviations = returns_df.sub(cross_mean, axis=0)
+    dispersion = deviations.var(axis=1).rolling(20).mean()
+    return dispersion
 
 
 def _vectorized_mean_correlation(ret_df, window):

@@ -175,6 +175,15 @@ def _build_signal(weights_by_agent, tickers, vix, regime, features):
     }
 
 
+def _build_signal_meta(dispersion_pct, herd_market, current_dispersion):
+    """Returns dispersion info dict to attach to the signal."""
+    return {
+        "cross_sectional_dispersion": round(current_dispersion * 10000, 4),
+        "dispersion_percentile": round(dispersion_pct * 100, 1),
+        "herd_market_warning": herd_market,
+    }
+
+
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     default_out = os.environ.get(
@@ -191,7 +200,7 @@ def main():
 
     # ── 1. Load data ───────────────────────────────────────────────
     print("[RL Signal] Fetching market data...")
-    from data_loader import prepare_data
+    from data_loader import prepare_data, compute_cross_sectional_dispersion
     from config import TICKERS, LOOKBACK_WINDOW
 
     features, returns, close, regimes, regime_numeric, vix_series = prepare_data()
@@ -206,6 +215,14 @@ def main():
     current_vix = float(vix_series.iloc[-1])
     sector_tickers = [t for t in TICKERS if t in returns.columns]
 
+    # Cross-sectional dispersion: are stocks moving independently (good for RL)?
+    dispersion_series = compute_cross_sectional_dispersion(
+        returns.loc[features.index][sector_tickers]
+    )
+    current_dispersion = float(dispersion_series.dropna().iloc[-1]) if not dispersion_series.dropna().empty else 0.0
+    dispersion_pct = float(dispersion_series.dropna().rank(pct=True).iloc[-1]) if not dispersion_series.dropna().empty else 0.5
+    herd_market = dispersion_pct < 0.25  # bottom quartile = herd behavior
+
     print(f"  Data slice: {features.index[0].date()} → {features.index[-1].date()}")
     print(f"  Regime: {current_regime.upper()} | VIX: {current_vix:.1f}")
 
@@ -218,19 +235,31 @@ def main():
         sys.exit(1)
 
     # Detect model action dim from first loaded agent; trim tickers if needed.
-    # Existing 11-asset models still work after BTC/ETH are added to config.
+    # Also detect expected feature count from norm_stats to handle cross-sectional
+    # Z-score features added to the pipeline (18 features vs model's trained 14).
     sample_model = next(iter(agents.values()))
     model_n_assets = sample_model.action_space.shape[0]
+
+    # Infer expected feature count from norm_stats shape: (1, n_features, n_assets)
+    sample_ns = next(iter(norm_stats.values()), (None, None))
+    model_n_features = int(sample_ns[0].shape[1]) if sample_ns[0] is not None else None
+    current_n_features = len(features.columns.get_level_values("feature").unique())
+
     if model_n_assets < len(sector_tickers):
         print(f"  Model has {model_n_assets}-asset action space; "
               f"trimming tickers from {len(sector_tickers)} → {model_n_assets} "
               f"(retrain to use full universe)")
         sector_tickers = sector_tickers[:model_n_assets]
-        # Also drop BTC/ETH columns from features so obs-dim matches model
         keep_tickers = set(sector_tickers)
-        cols_to_keep = [c for c in features.columns
-                        if c[1] in keep_tickers]
-        features = features[cols_to_keep]
+        features = features[[c for c in features.columns if c[1] in keep_tickers]]
+
+    if model_n_features and current_n_features > model_n_features:
+        print(f"  Model trained on {model_n_features} features; "
+              f"dropping {current_n_features - model_n_features} new features for compat "
+              f"(retrain to use cross-sectional Z-scores)")
+        all_feat_names = sorted(features.columns.get_level_values("feature").unique())
+        keep_feats = set(all_feat_names[:model_n_features])
+        features = features[[c for c in features.columns if c[0] in keep_feats]]
 
     # ── 3. Run inference ───────────────────────────────────────────
     print("[RL Signal] Running ensemble inference...")
@@ -247,6 +276,11 @@ def main():
 
     # ── 4. Build signal ────────────────────────────────────────────
     signal = _build_signal(weights_by_agent, sector_tickers, current_vix, current_regime, features)
+    signal.update(_build_signal_meta(dispersion_pct, herd_market, current_dispersion))
+
+    if herd_market:
+        print(f"  ⚠ Herd market detected (dispersion p{dispersion_pct*100:.0f}%) "
+              f"— stocks moving together, ReDo resets may trigger next retrain")
 
     print(f"\n[RL Signal] Decision: {signal['action']} {signal['target']} "
           f"@ {signal['confidence']}% confidence ({current_regime.upper()})")

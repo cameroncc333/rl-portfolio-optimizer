@@ -32,6 +32,141 @@ from portfolio_env import PortfolioEnv
 AGENT_CLASSES = {"PPO": PPO, "A2C": A2C, "SAC": SAC}
 
 
+class ReDoCallback(BaseCallback):
+    """
+    Recycles τ-dormant neurons per Castro et al. "ReDo" (2023).
+
+    Non-stationary financial data causes neurons to permanently stop activating
+    when a market regime shifts — the network "forgets" how to adapt. This callback
+    detects those dead weights and gives them a clean start while preserving the rest
+    of the network's learned behavior.
+
+    Steps every check_freq training steps:
+      1. Collect activations from all Linear layers via forward hooks.
+      2. For each neuron i in layer L, compute normalized score:
+             s_i = mean|act_i| / (sum_j mean|act_j| + ε)
+      3. If s_i < τ, the neuron is τ-dormant.
+      4. Re-initialize its input weights (Xavier), zero its bias.
+      5. Reset the Adam first and second moment estimates for those weights
+         (without this, Adam's momentum immediately pulls the new weights back
+         into the old dead state).
+      6. Set _frozen_steps so the agent outputs stay muted for a brief window
+         while the recycled neurons stabilize (prevents "recycling shock").
+    """
+
+    def __init__(self, check_freq=1000, tau=0.025, freeze_steps=15, verbose=1):
+        super().__init__(verbose)
+        self.check_freq = check_freq
+        self.tau = tau
+        self.freeze_steps = freeze_steps
+        self._hooks = []
+        self._activation_buffers = {}
+        self._frozen_steps = 0
+        self._total_recycled = 0
+        self.is_frozen = False
+
+    def _register_hooks(self):
+        import torch
+        self._activation_buffers.clear()
+        for h in self._hooks:
+            h.remove()
+        self._hooks.clear()
+
+        for name, module in self.model.policy.named_modules():
+            if isinstance(module, torch.nn.Linear):
+                buf = []
+                self._activation_buffers[name] = buf
+
+                def _hook(mod, inp, out, _buf=buf):
+                    _buf.append(out.detach().cpu())
+
+                self._hooks.append(module.register_forward_hook(_hook))
+
+    def _on_training_start(self):
+        self._register_hooks()
+
+    def _recycle(self):
+        import torch
+        policy = self.model.policy
+        opt = policy.optimizer
+        # Build id→state map once for fast lookup
+        id_to_state = {id(p): s for p, s in opt.state.items()}
+
+        total = 0
+        for name, module in policy.named_modules():
+            if not isinstance(module, torch.nn.Linear):
+                continue
+            buf = self._activation_buffers.get(name, [])
+            if not buf:
+                continue
+            acts = torch.cat(buf, dim=0)   # (N, out_features)
+            buf.clear()
+
+            neuron_scores = acts.abs().mean(dim=0)
+            total_score = neuron_scores.sum() + 1e-8
+            normalized = neuron_scores / total_score
+            dormant = normalized < self.tau
+
+            if not dormant.any():
+                continue
+
+            n_dead = int(dormant.sum().item())
+            total += n_dead
+
+            with torch.no_grad():
+                # Re-init input weights for dormant neurons (rows of weight matrix)
+                dead_idx = dormant.nonzero(as_tuple=True)[0]
+                torch.nn.init.xavier_uniform_(
+                    module.weight.data[dead_idx].unsqueeze(0)
+                    if dead_idx.numel() == 1 else module.weight.data[dead_idx]
+                )
+                if module.bias is not None:
+                    module.bias.data[dead_idx] = 0.0
+
+            # Reset Adam moments for these rows so momentum doesn't undo the init
+            for param in [module.weight, module.bias]:
+                if param is None:
+                    continue
+                state = id_to_state.get(id(param))
+                if not state or "exp_avg" not in state:
+                    continue
+                with torch.no_grad():
+                    state["exp_avg"][dead_idx] = 0.0
+                    state["exp_avg_sq"][dead_idx] = 0.0
+
+            if self.verbose > 0:
+                pct = 100 * n_dead / module.weight.shape[0]
+                print(f"    [ReDo] {name}: recycled {n_dead} "
+                      f"({pct:.1f}%) dormant neurons")
+
+        return total
+
+    def _on_step(self) -> bool:
+        if self._frozen_steps > 0:
+            self._frozen_steps -= 1
+            self.is_frozen = self._frozen_steps > 0
+            return True
+
+        if self.n_calls > 0 and self.n_calls % self.check_freq == 0:
+            n = self._recycle()
+            if n > 0:
+                self._total_recycled += n
+                self._frozen_steps = self.freeze_steps
+                self.is_frozen = True
+                if self.verbose >= 0:
+                    print(f"  [ReDo] Step {self.n_calls}: recycled {n} neurons "
+                          f"→ stabilizing for {self.freeze_steps} steps")
+        return True
+
+    def _on_training_end(self):
+        for h in self._hooks:
+            h.remove()
+        self._hooks.clear()
+        if self._total_recycled > 0:
+            print(f"  [ReDo] Training complete — total neurons recycled: "
+                  f"{self._total_recycled}")
+
+
 class PortfolioMetricsCallback(BaseCallback):
     def __init__(self, verbose=0):
         super().__init__(verbose)
@@ -126,6 +261,7 @@ def train_single(agent_name, train_feat, train_ret, train_regime,
 
     callbacks = CallbackList([
         PortfolioMetricsCallback(verbose=verbose),
+        ReDoCallback(check_freq=1_000, tau=0.025, freeze_steps=15, verbose=verbose),
         EvalCallback(
             eval_env, best_model_save_path=run_model_dir,
             log_path=run_log_dir, eval_freq=EVAL_FREQ,

@@ -127,6 +127,12 @@ REWARD_CLIP = 5.0              # [UPGRADE 12] Clip final reward to [-5, 5]
 # Existing models trained with USE_RELATIVE_REWARD=False are unaffected.
 USE_RELATIVE_REWARD = True
 
+# Cross-sectional Z-score features strip broad market noise so the agent
+# reads pure idiosyncratic alpha rather than sector-wide momentum.
+# Adds 4 extra features per asset (14 → 18) — requires retraining to use.
+# Set False to match existing 11-asset models (14-feature obs space).
+USE_CROSS_SECTIONAL_FEATURES = True
+
 # ═══════════════════════════════════════════════════════════════════
 # AGENT CONFIGURATIONS
 # ═══════════════════════════════════════════════════════════════════

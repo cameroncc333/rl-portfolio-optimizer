@@ -1,0 +1,81 @@
+name: RL Inference — 4× Daily
+
+# Runs fresh inference before each of the 4 daily briefings so every
+# notification uses live market data, not a stale morning signal.
+# Requires: SECTOR_COMMAND_TOKEN secret (PAT with repo write scope on
+# cameroncc333/sector-command-live).
+
+on:
+  schedule:
+    # All times UTC (EDT = UTC-4 in summer, EST = UTC-5 in winter)
+    # 8:50 AM EDT  = 12:50 UTC  (before 9:00 AM briefing)
+    - cron: '50 12 * * 1-5'
+    # 11:50 AM EDT = 15:50 UTC  (before 12:00 PM briefing)
+    - cron: '50 15 * * 1-5'
+    # 3:20 PM EDT  = 19:20 UTC  (before 3:30 PM briefing)
+    - cron: '20 19 * * 1-5'
+    # 4:20 PM EDT  = 20:20 UTC  (before 4:30 PM briefing)
+    - cron: '20 20 * * 1-5'
+  workflow_dispatch: {}   # also runnable manually from GitHub Actions tab
+
+jobs:
+  inference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Cache pip so re-installs of torch/SB3 take ~30s instead of ~4min
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: rl-inference-${{ hashFiles('requirements-rl.txt') }}
+          restore-keys: rl-inference-
+
+      - name: Install RL inference deps
+        run: pip install -r requirements-rl.txt
+
+      - name: Download production models from GitHub Release
+        run: |
+          echo "Downloading models-live.tar.gz from release v1.0-models..."
+          gh release download v1.0-models \
+            --repo ${{ github.repository }} \
+            --pattern "models-live.tar.gz" \
+            --dir /tmp \
+            --clobber
+          echo "Extracting..."
+          tar -xzf /tmp/models-live.tar.gz
+          # Ensure models land in models-live/ (some tarballs have different root)
+          if [ -d "models" ] && [ ! -d "models-live" ]; then
+            mv models models-live
+          fi
+          echo "Models ready:"
+          ls models-live/
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run RL inference
+        run: python generate_rl_signal.py --out /tmp/rl_signal.json
+        # On failure (e.g. data unavailable), don't push stale stub
+        # The sector-command-live engine falls back to yesterday's signal
+
+      - name: Push signal to sector-command-live
+        env:
+          SC_TOKEN: ${{ secrets.SECTOR_COMMAND_TOKEN }}
+        run: |
+          git clone https://x-access-token:${SC_TOKEN}@github.com/cameroncc333/sector-command-live.git sc_repo
+          cp /tmp/rl_signal.json sc_repo/data/rl_signal.json
+          cd sc_repo
+          git config user.name "rl-inference-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/rl_signal.json
+          git diff --cached --quiet && echo "Signal unchanged — skip push" && exit 0
+          git commit -m "rl: auto-signal $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
+          echo "Signal pushed successfully."

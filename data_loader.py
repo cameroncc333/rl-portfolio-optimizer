@@ -15,14 +15,21 @@ from config import (
     DATA_START, DATA_END, RETURN_WINDOWS, RSI_PERIOD,
     MACD_FAST, MACD_SLOW, MACD_SIGNAL, BOLLINGER_PERIOD,
     BOLLINGER_STD, VOLATILITY_WINDOW, SHARPE_WINDOW,
-    CORRELATION_WINDOW, LATE_INCEPTION
+    CORRELATION_WINDOW, LATE_INCEPTION, ABSTAIN_ASSETS
 )
 
 
-def fetch_data(tickers=None, start=DATA_START, end=DATA_END):
-    """Download sector ETFs, SPY, VIX, and VIX3M."""
+def fetch_data(tickers=None, start=DATA_START, end=DATA_END, include_abstain=False):
+    """Download sector ETFs, SPY, VIX, and VIX3M.
+    Set include_abstain=True when training the 13-asset v1.1 universe.
+    """
     if tickers is None:
-        tickers = TICKERS + [BENCHMARK_TICKER]
+        base = TICKERS + [BENCHMARK_TICKER]
+        if include_abstain:
+            # Add BIL (SPY already in base as benchmark)
+            extra = [t for t in ABSTAIN_ASSETS if t not in base]
+            base = base + extra
+        tickers = base
 
     print(f"[Data] Fetching {len(tickers)} tickers: {start} → {end}")
     data = yf.download(tickers, start=start, end=end, auto_adjust=True, progress=False)
@@ -191,8 +198,13 @@ def get_returns(close, tickers=None):
     return returns
 
 
-def prepare_data():
-    close, volume, vix, vix3m = fetch_data()
+def prepare_data(include_abstain=False):
+    """
+    Main entry point.
+    Pass include_abstain=True when retraining the 13-asset v1.1 universe
+    so SPY/BIL are treated as tradeable assets in the feature matrix.
+    """
+    close, volume, vix, vix3m = fetch_data(include_abstain=include_abstain)
     features, regimes, regime_numeric = compute_features(close, volume, vix, vix3m)
     returns = get_returns(close)
     common_idx = features.index.intersection(returns.index)

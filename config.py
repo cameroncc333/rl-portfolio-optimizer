@@ -20,13 +20,25 @@ SECTOR_ETFS = {
     "XLRE": "Real Estate",
     "XLU": "Utilities",
     "XLC": "Communication Svcs",
+    "BTC-USD": "Bitcoin",
+    "ETH-USD": "Ethereum",
 }
 TICKERS = list(SECTOR_ETFS.keys())
 NUM_ASSETS = len(TICKERS)
 
+# ── v1.1 Abstain universe (SPY = market-neutral, BIL = cash/defensive)
+# After retraining on 13+2=15 assets (incl BTC/ETH), change TICKERS = UNIVERSE below.
+# Current models (w2_s42) were trained on 11 assets — generate_rl_signal.py
+# auto-detects model action dim and trims tickers to match for backward compat.
+ABSTAIN_ASSETS = ["SPY", "BIL"]
+UNIVERSE = TICKERS + ABSTAIN_ASSETS    # 15 assets for v1.1 retrain
+N_ASSETS = len(UNIVERSE)               # 15; current models use NUM_ASSETS=11
+
 LATE_INCEPTION = {
-    "XLRE": "2015-10-08",
-    "XLC":  "2018-06-18",
+    "XLRE":    "2015-10-08",
+    "XLC":     "2018-06-18",
+    "BTC-USD": "2014-09-17",
+    "ETH-USD": "2015-08-07",
 }
 
 BENCHMARK_TICKER = "SPY"
@@ -37,7 +49,11 @@ VIX3M_TICKER = "^VIX3M"  # 3-month VIX for term structure slope
 # DATA SETTINGS
 # ═══════════════════════════════════════════════════════════════════
 DATA_START = "2008-01-01"
-DATA_END = "2026-04-01"
+# DATA_END is dynamic so inference always uses today's market data.
+# Historical backtests that need a fixed end date can override by setting
+# the DATA_END_OVERRIDE env var: DATA_END_OVERRIDE=2026-03-31 python evaluate.py
+import os as _os, datetime as _dt
+DATA_END = _os.environ.get("DATA_END_OVERRIDE", _dt.date.today().isoformat())
 LOOKBACK_WINDOW = 60
 
 WALK_FORWARD_WINDOWS = [
@@ -105,6 +121,11 @@ LAMBDA_CVAR = 0.5              # [UPGRADE 2] CVaR tail-risk penalty weight
 CVAR_ALPHA = 0.05              # Bottom 5% of returns for CVaR
 REWARD_SCALING = 100.0
 REWARD_CLIP = 5.0              # [UPGRADE 12] Clip final reward to [-5, 5]
+
+# Relative reward: use excess return vs SPY as the base signal.
+# Set to True when training with spy_returns passed to PortfolioEnv.
+# Existing models trained with USE_RELATIVE_REWARD=False are unaffected.
+USE_RELATIVE_REWARD = True
 
 # ═══════════════════════════════════════════════════════════════════
 # AGENT CONFIGURATIONS

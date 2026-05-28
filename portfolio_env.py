@@ -20,7 +20,7 @@ from config import (
     LAMBDA_CVAR, CVAR_ALPHA,
     REWARD_SCALING, REWARD_CLIP, LOOKBACK_WINDOW, REGIME_REWARD_MULTIPLIERS,
     RANDOM_START, KILL_SWITCH_THRESHOLD,
-    TC_CURRICULUM, TC_CURRICULUM_STEPS
+    TC_CURRICULUM, TC_CURRICULUM_STEPS, USE_RELATIVE_REWARD
 )
 
 
@@ -40,13 +40,18 @@ class PortfolioEnv(gym.Env):
                  ablation_mask=None,
                  norm_stats=None,
                  random_start=RANDOM_START,
-                 tc_curriculum=TC_CURRICULUM):
+                 tc_curriculum=TC_CURRICULUM,
+                 spy_returns=None):
         super().__init__()
 
         self.lookback = lookback
         self.random_start = random_start
         self.tc_curriculum = tc_curriculum
         self.global_step = 0  # For TC curriculum scheduling
+        # spy_returns: daily SPY returns aligned to same index as features/returns
+        # Used for relative reward shaping (reward = excess return vs SPY)
+        self.spy_returns = (spy_returns.values if hasattr(spy_returns, "values")
+                            else spy_returns)
 
         # Parse features
         all_features = sorted(features.columns.get_level_values("feature").unique())
@@ -183,11 +188,17 @@ class PortfolioEnv(gym.Env):
 
         regime_mult = REGIME_REWARD_MULTIPLIERS[regime_label]
 
-        # 1. Regime-scaled return
-        if portfolio_return < 0 and regime_label == "stressed":
-            reward = portfolio_return * regime_mult * 1.5
+        # 1. Regime-scaled return (optionally relative to SPY benchmark)
+        if USE_RELATIVE_REWARD and self.spy_returns is not None:
+            spy_r = float(self.spy_returns[self.current_step])
+            base_return = portfolio_return - spy_r
         else:
-            reward = portfolio_return * regime_mult
+            base_return = portfolio_return
+
+        if base_return < 0 and regime_label == "stressed":
+            reward = base_return * regime_mult * 1.5
+        else:
+            reward = base_return * regime_mult
 
         # 2. Transaction costs with curriculum [UPGRADE 10]
         turnover = np.sum(np.abs(new_weights - old_weights))

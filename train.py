@@ -49,13 +49,14 @@ class PortfolioMetricsCallback(BaseCallback):
         return True
 
 
-def make_env(features, returns, regime_numeric, norm_stats=None):
+def make_env(features, returns, regime_numeric, norm_stats=None, spy_returns=None):
     """Factory for monitored portfolio environment with optional norm stats."""
     def _init():
         env = PortfolioEnv(
             features, returns, regime_numeric,
             lookback=LOOKBACK_WINDOW,
             norm_stats=norm_stats,
+            spy_returns=spy_returns,
         )
         env = Monitor(env)
         return env
@@ -63,7 +64,8 @@ def make_env(features, returns, regime_numeric, norm_stats=None):
 
 
 def split_by_dates(features, returns, regime_numeric,
-                    train_start, train_end, test_start, test_end):
+                    train_start, train_end, test_start, test_end,
+                    spy_returns=None):
     """Split data for walk-forward: non-overlapping train and test."""
     ts = pd.Timestamp
     train_feat = features.loc[ts(train_start):ts(train_end)]
@@ -74,13 +76,21 @@ def split_by_dates(features, returns, regime_numeric,
     test_ret = returns.loc[ts(test_start):ts(test_end)]
     test_regime = regime_numeric.loc[ts(test_start):ts(test_end)]
 
+    if spy_returns is not None:
+        train_spy = spy_returns.loc[ts(train_start):ts(train_end)]
+        test_spy = spy_returns.loc[ts(test_start):ts(test_end)]
+    else:
+        train_spy = test_spy = None
+
     return (train_feat, train_ret, train_regime,
-            test_feat, test_ret, test_regime)
+            test_feat, test_ret, test_regime,
+            train_spy, test_spy)
 
 
 def train_single(agent_name, train_feat, train_ret, train_regime,
                  test_feat, test_ret, test_regime,
-                 seed, timesteps, window_id, verbose=1):
+                 seed, timesteps, window_id, verbose=1,
+                 train_spy=None, test_spy=None):
     """Train a single agent. Returns model path and norm stats."""
 
     agent_cfg = AGENTS[agent_name]
@@ -89,15 +99,16 @@ def train_single(agent_name, train_feat, train_ret, train_regime,
 
     # Create train environment and extract normalization stats
     train_env_raw = PortfolioEnv(train_feat, train_ret, train_regime,
-                                  lookback=LOOKBACK_WINDOW)
+                                  lookback=LOOKBACK_WINDOW, spy_returns=train_spy)
     train_norm_stats = train_env_raw.get_norm_stats()
 
     # Create vectorized envs — eval env uses TRAIN normalization stats
-    train_env = DummyVecEnv([make_env(train_feat, train_ret, train_regime)])
+    train_env = DummyVecEnv([make_env(train_feat, train_ret, train_regime,
+                                       spy_returns=train_spy)])
     train_env = VecNormalize(train_env, norm_obs=True, norm_reward=True, clip_obs=10.0)
 
     eval_env = DummyVecEnv([make_env(test_feat, test_ret, test_regime,
-                                      norm_stats=train_norm_stats)])
+                                      norm_stats=train_norm_stats, spy_returns=test_spy)])
     eval_env = VecNormalize(eval_env, norm_obs=True, norm_reward=False,
                              clip_obs=10.0, training=False)
 
@@ -164,6 +175,11 @@ def train_full(agents=None, timesteps=TOTAL_TIMESTEPS, seeds=None,
     print("\n[1/3] Loading data...")
     features, returns, close, regimes, regime_numeric, vix = prepare_data()
 
+    # SPY daily returns for relative reward shaping
+    from config import BENCHMARK_TICKER
+    spy_returns = close[BENCHMARK_TICKER].pct_change().fillna(0.0)
+    spy_returns = spy_returns.loc[features.index]
+
     print("\n[2/3] Training agents...")
     results_log = []
     run_count = 0
@@ -174,8 +190,10 @@ def train_full(agents=None, timesteps=TOTAL_TIMESTEPS, seeds=None,
         print(f"{'─' * 60}")
 
         (train_feat, train_ret, train_regime,
-         test_feat, test_ret, test_regime) = split_by_dates(
-            features, returns, regime_numeric, t_start, t_end, v_start, v_end
+         test_feat, test_ret, test_regime,
+         train_spy, test_spy) = split_by_dates(
+            features, returns, regime_numeric, t_start, t_end, v_start, v_end,
+            spy_returns=spy_returns,
         )
 
         print(f"  Train: {len(train_feat)} days | Test: {len(test_feat)} days")
@@ -194,6 +212,7 @@ def train_full(agents=None, timesteps=TOTAL_TIMESTEPS, seeds=None,
                         agent_name, train_feat, train_ret, train_regime,
                         test_feat, test_ret, test_regime,
                         seed, timesteps, w_idx, verbose,
+                        train_spy=train_spy, test_spy=test_spy,
                     )
                     results_log.append({
                         "agent": agent_name, "seed": seed, "window": w_idx,

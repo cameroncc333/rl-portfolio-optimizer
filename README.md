@@ -1,3 +1,5 @@
+> 🔗 **Component of [Sector Command Live](https://github.com/cameroncc333/sector-command-live)** — a production-deployed autonomous trading system running live every trading day. This repo supplies the **PPO/A2C/SAC ensemble** that makes the core daily sector allocation decisions. **[Live Dashboard →](https://sector-command-live.vercel.app)**
+
 # Regime-Adaptive Reinforcement Learning for Dynamic Sector Allocation
 
 **A Multi-Agent Comparison with Walk-Forward Validation, Ablation Analysis, and Bootstrap Inference**
